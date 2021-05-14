@@ -55,7 +55,7 @@ const int PS_OFFSET_REALITY[NB_DIST_SENS] = {480, 170, 320, 500, 600, 680, 210, 
 
 // 3 IR ground color sensors
 #define NB_GROUND_SENS 3
-#define GS_WHITE 900
+#define GS_WHITE 760  //alterado de 900 para 760
 #define GS_LEFT 0
 #define GS_CENTER 1
 #define GS_RIGHT 2
@@ -180,52 +180,6 @@ void ObstacleAvoidanceModule(void) {
     // Set speeds
     oam_speed[LEFT] -= DeltaS;
     oam_speed[RIGHT] += DeltaS;
-  }
-}
-
-////////////////////////////////////////////
-// LLM - Line Leaving Module
-//
-// Since it has no output, this routine is not completely finished. It has
-// been designed to monitor the moment while the robot is leaving the
-// track and signal to other modules some related events. It becomes active
-// whenever the "side" variable displays a rising edge (changing from -1 to 0 or 1).
-
-int llm_active = FALSE, llm_inibit_ofm_speed, llm_past_side = NO_SIDE;
-
-#define LLM_THRESHOLD 800
-
-void LineLeavingModule(int side) {
-  // Starting the module on a rising edge of "side"
-  if (!llm_active && side != NO_SIDE && llm_past_side == NO_SIDE)
-    llm_active = TRUE;
-
-  // Updating the memory of the "side" state at the previous call
-  llm_past_side = side;
-
-  // Main loop
-  if (llm_active)  // Simply waiting until the line is not detected anymore
-  {
-    if (side == LEFT) {
-      if ((gs_value[GS_CENTER] + gs_value[GS_LEFT]) / 2 > LLM_THRESHOLD)  // out of line
-      {
-        llm_active = FALSE;
-        // *** PUT YOUR CODE HERE ***
-      } else  // still leaving the line
-      {
-        // *** PUT YOUR CODE HERE ***
-      }
-    } else  // side == RIGHT
-    {
-      if ((gs_value[GS_CENTER] + gs_value[GS_RIGHT]) / 2 > LLM_THRESHOLD)  // out of line
-      {
-        llm_active = FALSE;
-        // *** PUT YOUR CODE HERE ***
-      } else  // still leaving the line
-      {
-        // *** PUT YOUR CODE HERE ***
-      }
-    }
   }
 }
 
@@ -362,6 +316,70 @@ void LineEnteringModule(int side) {
   }
 }
 
+////////////////////////////////////////////
+// LLM - Line Leaving Module
+//
+// Since it has no output, this routine is not completely finished. It has
+// been designed to monitor the moment while the robot is leaving the
+// track and signal to other modules some related events. It becomes active
+// whenever the "side" variable displays a rising edge (changing from -1 to 0 or 1).
+
+int llm_active = FALSE, llm_inibit_ofm_speed, llm_past_side = NO_SIDE;
+int speed_llm[2];
+
+#define LLM_THRESHOLD 760   //Alterado de 800 para 760
+
+void LineLeavingModule(int side) {
+  // Starting the module on a rising edge of "side"
+  if (!llm_active && side != NO_SIDE && llm_past_side == NO_SIDE)
+    llm_active = TRUE;
+
+  // Updating the memory of the "side" state at the previous call
+  llm_past_side = side;
+
+  // Main loop
+  if (llm_active)  // Simply waiting until the line is not detected anymore
+  {
+    if (side == LEFT) {
+      if ((gs_value[GS_CENTER] + gs_value[GS_LEFT]) / 2 > LLM_THRESHOLD)  // out of line
+      {
+        llm_active = FALSE;
+        oam_reset = TRUE;
+        
+        //lem_state = LEM_STATE_LOOKING_FOR_LINE;
+        // *** PUT YOUR CODE HERE ***
+      } else  // still leaving the line
+      {
+        // *** PUT YOUR CODE HERE ***
+        //speed_llm[LEFT] = oam_speed[LEFT] + ofm_speed[LEFT];
+        //speed_llm[RIGHT] = oam_speed[RIGHT] + ofm_speed[RIGHT];
+        speed_llm[LEFT] = oam_speed[LEFT];
+        speed_llm[RIGHT] = oam_speed[RIGHT];
+        lem_reset = TRUE;
+      }
+    } else  // side == RIGHT
+    {
+      if ((gs_value[GS_CENTER] + gs_value[GS_RIGHT]) / 2 > LLM_THRESHOLD)  // out of line
+      {
+        llm_active = FALSE;
+        oam_reset = TRUE;
+        
+        //lem_state = LEM_STATE_LOOKING_FOR_LINE;
+        
+        // *** PUT YOUR CODE HERE ***
+      } else  // still leaving the line
+      {
+        // *** PUT YOUR CODE HERE ***
+        speed_llm[LEFT] = oam_speed[LEFT];
+        speed_llm[RIGHT] = oam_speed[RIGHT];
+        lem_reset = TRUE;
+      }
+    }
+  }
+}
+
+
+
 //------------------------------------------------------------------------------
 //    CONTROLLER
 //------------------------------------------------------------------------------
@@ -370,7 +388,7 @@ void LineEnteringModule(int side) {
 // Main
 int main() {
   int i, speed[2], ps_offset[NB_DIST_SENS] = {0, 0, 0, 0, 0, 0, 0, 0}, Mode = 1;
-
+  int last_side = -1;
   /* intialize Webots */
   wb_robot_init();
 
@@ -398,7 +416,8 @@ int main() {
   wb_motor_set_velocity(left_motor, 0.0);
   wb_motor_set_velocity(right_motor, 0.0);
 
-  for (;;) {  // Main loop
+
+  for (;;) {  // Main loop 
     // Run one simulation step
     wb_robot_step(TIME_STEP);
 
@@ -456,25 +475,40 @@ int main() {
     speed[RIGHT] = 0;
 
     // *** START OF SUBSUMPTION ARCHITECTURE ***
-
+    // Precisa de uma variavel para guardar o ultimo estado
     // LFM - Line Following Module
     LineFollowingModule();
     ObstacleAvoidanceModule();
-    //LineEnteringModule(LEFT);
+    ObstacleFollowingModule(oam_side);
+    LineEnteringModule(last_side);
+    //LineEnteringModule(oam_side);
     // Speed computation
     //
-    if(oam_active){
+   if(oam_active){
       //Aqui não funciona
-      ObstacleFollowingModule(oam_side);
-      speed[LEFT] = oam_speed[LEFT] + ofm_speed[LEFT];
-      speed[RIGHT] = oam_speed[RIGHT] + ofm_speed[RIGHT];
+      LineLeavingModule(oam_side);
+      speed[LEFT] = speed_llm[LEFT];
+      speed[RIGHT] = speed_llm[RIGHT];
+      last_side = oam_side;
+      //lem_reset = TRUE;
+    } else if(lem_active) {
+      speed[LEFT] = lem_speed[LEFT];
+      //speed[RIGHT] = lem_speed[RIGHT];
+
     } else {
+      last_side = -1;
       speed[LEFT] = lfm_speed[LEFT];
       speed[RIGHT] = lfm_speed[RIGHT];
     }
     
-    //speed[LEFT] = lem_speed[LEFT];
-    //speed[RIGHT] = lem_speed[RIGHT];
+    
+    //printf("LEM speed %d %d\n", lfm_speed[LEFT], lfm_speed[RIGHT]);
+    /*
+      speed[LEFT] = lem_speed[LEFT];
+      speed[RIGHT] = lem_speed[RIGHT];
+      printf("LEM speed %d %d\n", lem_speed[LEFT], lem_speed[RIGHT]);
+    */
+    
     
     //printf("Speed left: %d right %d", ofm_speed[LEFT], ofm_speed[RIGHT]);
     
@@ -482,10 +516,15 @@ int main() {
     // *** END OF SUBSUMPTION ARCHITECTURE ***
 
     // Debug display
-    printf("OAM %d side %d   \n", oam_active, oam_side);
-    printf("%d %d\n", ps_value[i], oam_side);
-     
-
+    //printf("OAM %d side %d   \n", oam_active, oam_side);
+    //printf("%d %d\n", ps_value[PS_RIGHT_00],  ps_value[PS_LEFT_00]);
+    //printf("LLM %d\n", llm_active);
+    //printf("LEM state%d\n", lem_state);
+   // printf("OAM %d side %d   LLM %d inibitA %d   OFM %d   LEM %d state %d oam_reset %d\n", oam_active, oam_side, llm_active,
+   //        llm_inibit_ofm_speed, ofm_active, lem_active, lem_state, oam_reset);
+    //printf("CL %d", (gs_value[GS_CENTER] + gs_value[GS_LEFT]) / 2);
+    //printf("CR %d\n", (gs_value[GS_CENTER] + gs_value[GS_RIGHT]) / 2);
+    printf("LEM %d   STATE %d    last side %d\n", lem_active, lem_state, last_side);
     // Set wheel speeds
     wb_motor_set_velocity(left_motor, 0.00628 * speed[LEFT]);
     wb_motor_set_velocity(right_motor, 0.00628 * speed[RIGHT]);
