@@ -248,10 +248,10 @@ void LineEnteringModule(int side) {
 
   // Module reset
   if (lem_reset)
-    lem_state = LEM_STATE_LOOKING_FOR_LINE;
+  lem_state = LEM_STATE_LOOKING_FOR_LINE;
   lem_reset = FALSE;
 
-  // Initialization
+  // Identify the of the obstacle
   lem_speed[LEFT] = LEM_FORWARD_SPEED;
   lem_speed[RIGHT] = LEM_FORWARD_SPEED;
   if (side == LEFT) {  // if obstacle on left side -> enter line rightward
