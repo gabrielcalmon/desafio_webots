@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-/***************************************************************************
+/*********
   desafio-webots
-***************************************************************************/
+*********/
 
 #include <stdio.h>
 #include <webots/distance_sensor.h>
@@ -50,12 +50,12 @@
 WbDeviceTag ps[NB_DIST_SENS]; /* proximity sensors */
 int ps_value[NB_DIST_SENS] = {0, 0, 0, 0, 0, 0, 0, 0};
 const int PS_OFFSET_SIMULATION[NB_DIST_SENS] = {300, 300, 300, 300, 300, 300, 300, 300};
-// *** TO BE ADAPTED TO YOUR ROBOT ***
+// * TO BE ADAPTED TO YOUR ROBOT *
 const int PS_OFFSET_REALITY[NB_DIST_SENS] = {480, 170, 320, 500, 600, 680, 210, 640};
 
 // 3 IR ground color sensors
 #define NB_GROUND_SENS 3
-#define GS_WHITE 760  //alterado de 900 para 760
+#define GS_WHITE 760  //changed from 900 to 760
 #define GS_LEFT 0
 #define GS_CENTER 1
 #define GS_RIGHT 2
@@ -248,10 +248,10 @@ void LineEnteringModule(int side) {
 
   // Module reset
   if (lem_reset)
-  lem_state = LEM_STATE_LOOKING_FOR_LINE;
+    lem_state = LEM_STATE_LOOKING_FOR_LINE;
   lem_reset = FALSE;
 
-  // Identify the of the obstacle
+  // Initialization
   lem_speed[LEFT] = LEM_FORWARD_SPEED;
   lem_speed[RIGHT] = LEM_FORWARD_SPEED;
   if (side == LEFT) {  // if obstacle on left side -> enter line rightward
@@ -269,7 +269,7 @@ void LineEnteringModule(int side) {
   // Main loop (state machine)
   switch (lem_state) {
     case LEM_STATE_STANDBY:
-      lem_active = FALSE;
+      //lem_active = FALSE;
       break;
     case LEM_STATE_LOOKING_FOR_LINE:
       if (gs_value[GS_Side] < LEM_THRESHOLD) {
@@ -327,7 +327,7 @@ void LineEnteringModule(int side) {
 int llm_active = FALSE, llm_inibit_ofm_speed, llm_past_side = NO_SIDE;
 int speed_llm[2];
 
-#define LLM_THRESHOLD 760   //Alterado de 800 para 760
+#define LLM_THRESHOLD 760   //Changed de 800 para 760
 
 void LineLeavingModule(int side) {
   // Starting the module on a rising edge of "side"
@@ -343,35 +343,28 @@ void LineLeavingModule(int side) {
     if (side == LEFT) {
       if ((gs_value[GS_CENTER] + gs_value[GS_LEFT]) / 2 > LLM_THRESHOLD)  // out of line
       {
+        // * PUT YOUR CODE HERE *
         llm_active = FALSE;
         oam_reset = TRUE;
         
-        //lem_state = LEM_STATE_LOOKING_FOR_LINE;
-        // *** PUT YOUR CODE HERE ***
       } else  // still leaving the line
       {
-        // *** PUT YOUR CODE HERE ***
-        //speed_llm[LEFT] = oam_speed[LEFT] + ofm_speed[LEFT];
-        //speed_llm[RIGHT] = oam_speed[RIGHT] + ofm_speed[RIGHT];
-        speed_llm[LEFT] = oam_speed[LEFT];
-        speed_llm[RIGHT] = oam_speed[RIGHT];
+        // * PUT YOUR CODE HERE *
         lem_reset = TRUE;
       }
     } else  // side == RIGHT
     {
       if ((gs_value[GS_CENTER] + gs_value[GS_RIGHT]) / 2 > LLM_THRESHOLD)  // out of line
       {
+        // * PUT YOUR CODE HERE *
         llm_active = FALSE;
         oam_reset = TRUE;
         
-        //lem_state = LEM_STATE_LOOKING_FOR_LINE;
-        
-        // *** PUT YOUR CODE HERE ***
       } else  // still leaving the line
       {
-        // *** PUT YOUR CODE HERE ***
-        speed_llm[LEFT] = oam_speed[LEFT];
-        speed_llm[RIGHT] = oam_speed[RIGHT];
+        // * PUT YOUR CODE HERE *
+        speed_llm[LEFT] = oam_speed[LEFT] + ofm_speed[LEFT];
+        speed_llm[RIGHT] = oam_speed[RIGHT] + ofm_speed[LEFT];
         lem_reset = TRUE;
       }
     }
@@ -388,7 +381,6 @@ void LineLeavingModule(int side) {
 // Main
 int main() {
   int i, speed[2], ps_offset[NB_DIST_SENS] = {0, 0, 0, 0, 0, 0, 0, 0}, Mode = 1;
-  int last_side = -1;
   /* intialize Webots */
   wb_robot_init();
 
@@ -452,8 +444,11 @@ int main() {
       ps_value[i] = (((int)wb_distance_sensor_get_value(ps[i]) - ps_offset[i]) < 0) ?
                       0 :
                       ((int)wb_distance_sensor_get_value(ps[i]) - ps_offset[i]);
-    for (i = 0; i < NB_GROUND_SENS; i++)
-      gs_value[i] = wb_distance_sensor_get_value(gs[i]);
+    for (i = 0; i < NB_GROUND_SENS; i++){
+       gs_value[i] = wb_distance_sensor_get_value(gs[i]);
+       //printf("%d\n", gs_value[1]);
+    }
+     
 
     // Reset all BB variables when switching from simulation to real robot and back
     if (Mode != wb_robot_get_mode()) {
@@ -474,14 +469,15 @@ int main() {
     speed[LEFT] = 0;
     speed[RIGHT] = 0;
 
-    // *** START OF SUBSUMPTION ARCHITECTURE ***
+    // * START OF SUBSUMPTION ARCHITECTURE *
     // Precisa de uma variavel para guardar o ultimo estado
     // LFM - Line Following Module
-    LineFollowingModule();
+
+    //NOVO ATUAL 2000
+    /*LineFollowingModule();
     ObstacleAvoidanceModule();
     ObstacleFollowingModule(oam_side);
-    LineEnteringModule(last_side);
-    //LineEnteringModule(oam_side);
+    //LineEnteringModule(RIGHT);
     // Speed computation
     //
    if(oam_active){
@@ -489,42 +485,52 @@ int main() {
       LineLeavingModule(oam_side);
       speed[LEFT] = speed_llm[LEFT];
       speed[RIGHT] = speed_llm[RIGHT];
-      last_side = oam_side;
+    } else {
+      speed[LEFT] = lfm_speed[LEFT];
+      speed[RIGHT] = lfm_speed[RIGHT];
+    }*/
+
+    //ANTIGO 1990
+    LineFollowingModule();
+    ObstacleAvoidanceModule();
+    ObstacleFollowingModule(oam_side);
+    LineLeavingModule(oam_side);
+    LineEnteringModule(oam_side);
+    speed[LEFT] = speed_llm[LEFT];
+    speed[RIGHT] = speed_llm[RIGHT];
+    if(oam_active && lem_state < 2){
+      ObstacleFollowingModule(oam_side);
+      LineLeavingModule(oam_side);
+      speed[LEFT] = oam_speed[LEFT] + ofm_speed[LEFT];
+      speed[RIGHT] = oam_speed[RIGHT] + ofm_speed[RIGHT];
       //lem_reset = TRUE;
     } else if(lem_active) {
       speed[LEFT] = lem_speed[LEFT];
-      //speed[RIGHT] = lem_speed[RIGHT];
+      speed[RIGHT] = lem_speed[RIGHT];
 
     } else {
-      last_side = -1;
       speed[LEFT] = lfm_speed[LEFT];
       speed[RIGHT] = lfm_speed[RIGHT];
     }
+
     
     
-    //printf("LEM speed %d %d\n", lfm_speed[LEFT], lfm_speed[RIGHT]);
-    /*
-      speed[LEFT] = lem_speed[LEFT];
-      speed[RIGHT] = lem_speed[RIGHT];
-      printf("LEM speed %d %d\n", lem_speed[LEFT], lem_speed[RIGHT]);
-    */
     
-    
-    //printf("Speed left: %d right %d", ofm_speed[LEFT], ofm_speed[RIGHT]);
     
 
-    // *** END OF SUBSUMPTION ARCHITECTURE ***
+    // * END OF SUBSUMPTION ARCHITECTURE *
 
     // Debug display
+    //printf("Speed left: %d right %d", ofm_speed[LEFT], ofm_speed[RIGHT]);
     //printf("OAM %d side %d   \n", oam_active, oam_side);
     //printf("%d %d\n", ps_value[PS_RIGHT_00],  ps_value[PS_LEFT_00]);
     //printf("LLM %d\n", llm_active);
     //printf("LEM state%d\n", lem_state);
-   // printf("OAM %d side %d   LLM %d inibitA %d   OFM %d   LEM %d state %d oam_reset %d\n", oam_active, oam_side, llm_active,
-   //        llm_inibit_ofm_speed, ofm_active, lem_active, lem_state, oam_reset);
+    //printf("OAM %d side %d   LLM %d inibitA %d   OFM %d   LEM %d state %d oam_reset %d\n", oam_active, oam_side, llm_active,
+    //       llm_inibit_ofm_speed, ofm_active, lem_active, lem_state, oam_reset);
     //printf("CL %d", (gs_value[GS_CENTER] + gs_value[GS_LEFT]) / 2);
     //printf("CR %d\n", (gs_value[GS_CENTER] + gs_value[GS_RIGHT]) / 2);
-    printf("LEM %d   STATE %d    last side %d\n", lem_active, lem_state, last_side);
+    printf("LEM %d  OAM %d   STATE %d   left %d right %d\n", lem_active, oam_active, lem_state, lem_speed[LEFT], lem_speed[RIGHT]);
     // Set wheel speeds
     wb_motor_set_velocity(left_motor, 0.00628 * speed[LEFT]);
     wb_motor_set_velocity(right_motor, 0.00628 * speed[RIGHT]);
