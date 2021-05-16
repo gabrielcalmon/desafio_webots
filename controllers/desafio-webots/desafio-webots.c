@@ -108,7 +108,7 @@ int oam_active, oam_reset;
 int oam_speed[2];
 int oam_side = NO_SIDE;
 
-#define OAM_OBST_THRESHOLD 1 //CHANGED FROM 100 TO 200=
+#define OAM_OBST_THRESHOLD 100  //CHANGED FROM 100 TO 200
 #define OAM_FORWARD_SPEED 150
 #define OAM_K_PS_90 0.2
 #define OAM_K_PS_45 0.9
@@ -132,7 +132,6 @@ void ObstacleAvoidanceModule(void) {
     if (max_ds_value < ps_value[i])
       max_ds_value = ps_value[i];
     Activation[RIGHT] += ps_value[i];
-
   }
   for (i = PS_LEFT_45; i <= PS_LEFT_00; i++) {
     if (max_ds_value < ps_value[i])
