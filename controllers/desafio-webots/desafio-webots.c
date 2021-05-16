@@ -113,7 +113,7 @@ int oam_side = NO_SIDE;
 #define OAM_K_PS_90 0.2
 #define OAM_K_PS_45 0.9
 #define OAM_K_PS_00 1.2
-#define OAM_K_MAX_DELTAS 600
+#define OAM_K_MAX_DELTAS 400
 
 void ObstacleAvoidanceModule(void) {
   int max_ds_value, i;
@@ -145,7 +145,7 @@ void ObstacleAvoidanceModule(void) {
   {
     if (Activation[RIGHT] > Activation[LEFT])
       oam_side = RIGHT;
-    else if(Activation[RIGHT] > Activation[LEFT]){
+    else if(Activation[RIGHT] < Activation[LEFT]){
       oam_side = LEFT;}
       else{
         oam_side = RIGHT;
