@@ -95,7 +95,7 @@ void LineFollowingModule(void) {
 }
 
 ////////////////////////////////////////////
-// OAM - Obstacle Avoidance Module
+//   - Obstacle Avoidance Module
 //
 // The OAM routine first detects obstacles in front of the robot, then records
 // their side in "oam_side" and avoid the detected obstacle by
@@ -145,9 +145,12 @@ void ObstacleAvoidanceModule(void) {
   {
     if (Activation[RIGHT] > Activation[LEFT])
       oam_side = RIGHT;
-    else
-      oam_side = LEFT;
-  }
+    else if(Activation[RIGHT] > Activation[LEFT]){
+      oam_side = LEFT;}
+      else{
+        oam_side = RIGHT;
+      }
+  } 
 
   // Forward speed
   oam_speed[LEFT] = OAM_FORWARD_SPEED;
