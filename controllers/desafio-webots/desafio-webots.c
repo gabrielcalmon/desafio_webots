@@ -143,6 +143,7 @@ void ObstacleAvoidanceModule(void) {
 
   if (oam_active && oam_side == NO_SIDE)  // check for side of obstacle only when not already detected
   {
+  printf("%d", oam_side);
     if (Activation[RIGHT] > Activation[LEFT])
       oam_side = RIGHT;
     else if(Activation[RIGHT] < Activation[LEFT]){
