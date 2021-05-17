@@ -28,5 +28,4 @@ Para fazer o download deste reposit√≥rio basta clonar numa pasta de sua `prefer√
 $ git clone https://github.com/GabrielCalmon/desafio_webots
 ``` 
 
-*Pi Pi Ding Ding Ommm tu du di du di un*
-        -R2D2
+*"Pi Pi Ding Ding Ommm tu du di du di un"* - R2D2
