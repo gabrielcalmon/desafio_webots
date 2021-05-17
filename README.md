@@ -1,6 +1,6 @@
 # Desafio Webots - 2021.1
 
-![banner](https://github.com/Brazilian-Institute-of-Robotics/desafiorobotica/blob/webots-2021/resources/banner.png)
+![banner](https://github.com/GabrielCalmon/desafio_webots/blob/main/resources/banner.PNG?raw=true)
 
 Este repositório foi criado para o desenvolvimento do desafio da AV2 da disciplina **Sistemas Embarcados**. O robô utilizado foi o Pioneer 3-DX <https://cyberbotics.com/doc/guide/pioneer-3dx?tab-language=c#adepts-pioneer-3-dx>.
 
