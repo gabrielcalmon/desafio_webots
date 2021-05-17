@@ -55,7 +55,7 @@ const int PS_OFFSET_REALITY[NB_DIST_SENS] = {480, 170, 320, 500, 600, 680, 210, 
 
 // 3 IR ground color sensors
 #define NB_GROUND_SENS 3
-#define GS_WHITE 760  //changed from 900 to 760
+#define GS_WHITE 760  //changed from 900 to 760 
 #define GS_LEFT 0
 #define GS_CENTER 1
 #define GS_RIGHT 2
@@ -113,7 +113,7 @@ int oam_side = NO_SIDE;
 #define OAM_K_PS_90 0.2
 #define OAM_K_PS_45 0.9
 #define OAM_K_PS_00 1.2
-#define OAM_K_MAX_DELTAS 400
+#define OAM_K_MAX_DELTAS 400    // Changed from 600 to 400
 
 void ObstacleAvoidanceModule(void) {
   int max_ds_value, i;
@@ -146,11 +146,9 @@ void ObstacleAvoidanceModule(void) {
   printf("%d", oam_side);
     if (Activation[RIGHT] > Activation[LEFT])
       oam_side = RIGHT;
-    else if(Activation[RIGHT] < Activation[LEFT]){
-      oam_side = LEFT;}
-      else{
-        oam_side = RIGHT;
-      }
+      else
+        oam_side = LEFT;
+      
   } 
 
   // Forward speed
@@ -477,34 +475,15 @@ int main() {
     // Precisa de uma variavel para guardar o ultimo estado
     // LFM - Line Following Module
 
-    //NOVO ATUAL 2000
-    /*LineFollowingModule();
-    ObstacleAvoidanceModule();
-    ObstacleFollowingModule(oam_side);
-    //LineEnteringModule(RIGHT);
-    // Speed computation
-    //
-   if(oam_active){
-      //Aqui não funciona
-      LineLeavingModule(oam_side);
-      speed[LEFT] = speed_llm[LEFT];
-      speed[RIGHT] = speed_llm[RIGHT];
-    } else {
-      speed[LEFT] = lfm_speed[LEFT];
-      speed[RIGHT] = lfm_speed[RIGHT];
-    }*/
-
     //ANTIGO 1990
     LineFollowingModule();
     ObstacleAvoidanceModule();
-    ObstacleFollowingModule(oam_side);
     LineLeavingModule(oam_side);
+    ObstacleFollowingModule(oam_side);
     LineEnteringModule(oam_side);
     speed[LEFT] = speed_llm[LEFT];
     speed[RIGHT] = speed_llm[RIGHT];
     if(oam_active && lem_state < 2){
-      ObstacleFollowingModule(oam_side);
-      LineLeavingModule(oam_side);
       speed[LEFT] = oam_speed[LEFT] + ofm_speed[LEFT];
       speed[RIGHT] = oam_speed[RIGHT] + ofm_speed[RIGHT];
       //lem_reset = TRUE;
@@ -523,17 +502,6 @@ int main() {
     
 
     // * END OF SUBSUMPTION ARCHITECTURE *
-
-    // Debug display
-    //printf("Speed left: %d right %d", ofm_speed[LEFT], ofm_speed[RIGHT]);
-    //printf("OAM %d side %d   \n", oam_active, oam_side);
-    //printf("%d %d\n", ps_value[PS_RIGHT_00],  ps_value[PS_LEFT_00]);
-    //printf("LLM %d\n", llm_active);
-    //printf("LEM state%d\n", lem_state);
-    //printf("OAM %d side %d   LLM %d inibitA %d   OFM %d   LEM %d state %d oam_reset %d\n", oam_active, oam_side, llm_active,
-    //       llm_inibit_ofm_speed, ofm_active, lem_active, lem_state, oam_reset);
-    //printf("CL %d", (gs_value[GS_CENTER] + gs_value[GS_LEFT]) / 2);
-    //printf("CR %d\n", (gs_value[GS_CENTER] + gs_value[GS_RIGHT]) / 2);
     printf("LEM %d  OAM %d   STATE %d   left %d right %d\n", lem_active, oam_active, lem_state, lem_speed[LEFT], lem_speed[RIGHT]);
     // Set wheel speeds
     wb_motor_set_velocity(left_motor, 0.00628 * speed[LEFT]);
