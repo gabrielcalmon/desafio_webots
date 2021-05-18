@@ -55,7 +55,7 @@ const int PS_OFFSET_REALITY[NB_DIST_SENS] = {480, 170, 320, 500, 600, 680, 210, 
 
 // 3 IR ground color sensors
 #define NB_GROUND_SENS 3
-#define GS_WHITE 760  //changed from 900 to 760
+#define GS_WHITE 760  //changed from 900 to 760 
 #define GS_LEFT 0
 #define GS_CENTER 1
 #define GS_RIGHT 2
@@ -113,7 +113,7 @@ int oam_side = NO_SIDE;
 #define OAM_K_PS_90 0.2
 #define OAM_K_PS_45 0.9
 #define OAM_K_PS_00 1.2
-#define OAM_K_MAX_DELTAS 400
+#define OAM_K_MAX_DELTAS 400    // Changed from 600 to 400
 
 void ObstacleAvoidanceModule(void) {
   int max_ds_value, i;
@@ -143,14 +143,11 @@ void ObstacleAvoidanceModule(void) {
 
   if (oam_active && oam_side == NO_SIDE)  // check for side of obstacle only when not already detected
   {
-  printf("%d", oam_side);
     if (Activation[RIGHT] > Activation[LEFT])
       oam_side = RIGHT;
-    else if(Activation[RIGHT] < Activation[LEFT]){
-      oam_side = LEFT;}
-      else{
-        oam_side = RIGHT;
-      }
+      else
+        oam_side = LEFT;
+      
   } 
 
   // Forward speed
@@ -327,6 +324,7 @@ void LineEnteringModule(int side) {
 // been designed to monitor the moment while the robot is leaving the
 // track and signal to other modules some related events. It becomes active
 // whenever the "side" variable displays a rising edge (changing from -1 to 0 or 1).
+// foi adaptado para ser utilizado como um módulo de transição de estado
 
 int llm_active = FALSE, llm_inibit_ofm_speed, llm_past_side = NO_SIDE;
 int speed_llm[2];
@@ -361,15 +359,16 @@ void LineLeavingModule(int side) {
       if ((gs_value[GS_CENTER] + gs_value[GS_RIGHT]) / 2 > LLM_THRESHOLD)  // out of line
       {
         // * PUT YOUR CODE HERE *
-        llm_active = FALSE;
-        oam_reset = TRUE;
+        llm_active = FALSE;   //Se está fora da linha o módulo LLM se torna desnecessário
+        oam_reset = TRUE;     //Reset do OAM para que possa se verificar a persistência ou não do obstáculo
         
       } else  // still leaving the line
       {
         // * PUT YOUR CODE HERE *
-        speed_llm[LEFT] = oam_speed[LEFT] + ofm_speed[LEFT];
-        speed_llm[RIGHT] = oam_speed[RIGHT] + ofm_speed[LEFT];
-        lem_reset = TRUE;
+        // Trecho utilizado diretamente no controlador e não aqui
+        //speed_llm[LEFT] = oam_speed[LEFT] + ofm_speed[LEFT];
+        //speed_llm[RIGHT] = oam_speed[RIGHT] + ofm_speed[LEFT];
+        lem_reset = TRUE;     //Inicializa o LEM
       }
     }
   }
@@ -477,34 +476,15 @@ int main() {
     // Precisa de uma variavel para guardar o ultimo estado
     // LFM - Line Following Module
 
-    //NOVO ATUAL 2000
-    /*LineFollowingModule();
-    ObstacleAvoidanceModule();
-    ObstacleFollowingModule(oam_side);
-    //LineEnteringModule(RIGHT);
-    // Speed computation
-    //
-   if(oam_active){
-      //Aqui não funciona
-      LineLeavingModule(oam_side);
-      speed[LEFT] = speed_llm[LEFT];
-      speed[RIGHT] = speed_llm[RIGHT];
-    } else {
-      speed[LEFT] = lfm_speed[LEFT];
-      speed[RIGHT] = lfm_speed[RIGHT];
-    }*/
-
     //ANTIGO 1990
     LineFollowingModule();
     ObstacleAvoidanceModule();
-    ObstacleFollowingModule(oam_side);
     LineLeavingModule(oam_side);
+    ObstacleFollowingModule(oam_side);
     LineEnteringModule(oam_side);
     speed[LEFT] = speed_llm[LEFT];
     speed[RIGHT] = speed_llm[RIGHT];
     if(oam_active && lem_state < 2){
-      ObstacleFollowingModule(oam_side);
-      LineLeavingModule(oam_side);
       speed[LEFT] = oam_speed[LEFT] + ofm_speed[LEFT];
       speed[RIGHT] = oam_speed[RIGHT] + ofm_speed[RIGHT];
       //lem_reset = TRUE;
@@ -523,18 +503,8 @@ int main() {
     
 
     // * END OF SUBSUMPTION ARCHITECTURE *
-
-    // Debug display
-    //printf("Speed left: %d right %d", ofm_speed[LEFT], ofm_speed[RIGHT]);
-    //printf("OAM %d side %d   \n", oam_active, oam_side);
-    //printf("%d %d\n", ps_value[PS_RIGHT_00],  ps_value[PS_LEFT_00]);
-    //printf("LLM %d\n", llm_active);
-    //printf("LEM state%d\n", lem_state);
-    //printf("OAM %d side %d   LLM %d inibitA %d   OFM %d   LEM %d state %d oam_reset %d\n", oam_active, oam_side, llm_active,
-    //       llm_inibit_ofm_speed, ofm_active, lem_active, lem_state, oam_reset);
-    //printf("CL %d", (gs_value[GS_CENTER] + gs_value[GS_LEFT]) / 2);
-    //printf("CR %d\n", (gs_value[GS_CENTER] + gs_value[GS_RIGHT]) / 2);
-    printf("LEM %d  OAM %d   STATE %d   left %d right %d\n", lem_active, oam_active, lem_state, lem_speed[LEFT], lem_speed[RIGHT]);
+    printf("OAM %d side %d   LLM %d   OFM %d   LEM %d state %d  oam_reset %d  spd_left %d  spd_right %d\n", oam_active, oam_side, llm_active,
+        ofm_active, lem_active, lem_state, oam_reset, speed[LEFT], speed[RIGHT]);
     // Set wheel speeds
     wb_motor_set_velocity(left_motor, 0.00628 * speed[LEFT]);
     wb_motor_set_velocity(right_motor, 0.00628 * speed[RIGHT]);
