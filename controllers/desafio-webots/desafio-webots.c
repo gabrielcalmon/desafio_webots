@@ -143,7 +143,6 @@ void ObstacleAvoidanceModule(void) {
 
   if (oam_active && oam_side == NO_SIDE)  // check for side of obstacle only when not already detected
   {
-  printf("%d", oam_side);
     if (Activation[RIGHT] > Activation[LEFT])
       oam_side = RIGHT;
       else
@@ -325,6 +324,7 @@ void LineEnteringModule(int side) {
 // been designed to monitor the moment while the robot is leaving the
 // track and signal to other modules some related events. It becomes active
 // whenever the "side" variable displays a rising edge (changing from -1 to 0 or 1).
+// foi adaptado para ser utilizado como um módulo de transição de estado
 
 int llm_active = FALSE, llm_inibit_ofm_speed, llm_past_side = NO_SIDE;
 int speed_llm[2];
@@ -359,15 +359,16 @@ void LineLeavingModule(int side) {
       if ((gs_value[GS_CENTER] + gs_value[GS_RIGHT]) / 2 > LLM_THRESHOLD)  // out of line
       {
         // * PUT YOUR CODE HERE *
-        llm_active = FALSE;
-        oam_reset = TRUE;
+        llm_active = FALSE;   //Se está fora da linha o módulo LLM se torna desnecessário
+        oam_reset = TRUE;     //Reset do OAM para que possa se verificar a persistência ou não do obstáculo
         
       } else  // still leaving the line
       {
         // * PUT YOUR CODE HERE *
-        speed_llm[LEFT] = oam_speed[LEFT] + ofm_speed[LEFT];
-        speed_llm[RIGHT] = oam_speed[RIGHT] + ofm_speed[LEFT];
-        lem_reset = TRUE;
+        // Trecho utilizado diretamente no controlador e não aqui
+        //speed_llm[LEFT] = oam_speed[LEFT] + ofm_speed[LEFT];
+        //speed_llm[RIGHT] = oam_speed[RIGHT] + ofm_speed[LEFT];
+        lem_reset = TRUE;     //Inicializa o LEM
       }
     }
   }
@@ -502,7 +503,8 @@ int main() {
     
 
     // * END OF SUBSUMPTION ARCHITECTURE *
-    printf("LEM %d  OAM %d   STATE %d   left %d right %d\n", lem_active, oam_active, lem_state, lem_speed[LEFT], lem_speed[RIGHT]);
+    printf("OAM %d side %d   LLM %d   OFM %d   LEM %d state %d  oam_reset %d  spd_left %d  spd_right %d\n", oam_active, oam_side, llm_active,
+        ofm_active, lem_active, lem_state, oam_reset, speed[LEFT], speed[RIGHT]);
     // Set wheel speeds
     wb_motor_set_velocity(left_motor, 0.00628 * speed[LEFT]);
     wb_motor_set_velocity(right_motor, 0.00628 * speed[RIGHT]);
