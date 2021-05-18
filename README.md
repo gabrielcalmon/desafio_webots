@@ -10,13 +10,13 @@ A organização das pastas é a seguinte:
 
 - `resources` - Arquivos de suporte geral.
 
-- `worlds` - Contém o **mundo** para a simulação do desafio. Você pode carregá-los dentro do simulador Webots.
+- `worlds` - Contém o **mundo** para a simulação do desafio. Você pode carregá-lo dentro do simulador Webots.
 
-- `controllers` - Contém o **controle** para a simulação do desafio. Você pode carregá-lo dentro do simulador Webots.
+- `controllers` - Contém o **controle** para a simulação do desafio. Você também pode carregá-lo dentro do simulador Webots.
 
 # Instalação
 
-O simulador escolhido para este desafio é o Webots <https://cyberbotics.com/#cyberbotics>.
+O simulador empregado neste desafio foi o Webots <https://cyberbotics.com/#cyberbotics>.
 
 Webots é multiplataforma, ou seja pode ser instalado em qualquer sistema operacional.
 
